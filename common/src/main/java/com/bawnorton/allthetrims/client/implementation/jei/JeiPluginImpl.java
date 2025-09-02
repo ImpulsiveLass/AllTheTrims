@@ -18,7 +18,7 @@ import net.minecraft.recipe.SmithingTrimRecipe;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
-public class JeiPluginImpl implements IModPlugin {
+/*public class JeiPluginImpl implements IModPlugin {
     static final RecipeType<SmithingRecipe> smithingRecipeType = RecipeType.create(AllTheTrims.MOD_ID, "smithing", SmithingRecipe.class);
     static IRecipeCategory<SmithingRecipe> smithingCategory;
 
@@ -35,7 +35,7 @@ public class JeiPluginImpl implements IModPlugin {
     public void registerCategories(IRecipeCategoryRegistration registration) {
         IJeiHelpers jeiHelpers = registration.getJeiHelpers();
         IGuiHelper guiHelper = jeiHelpers.getGuiHelper();
-        registration.addRecipeCategories(smithingCategory = new AllTheTrimsSmithingRecipeCategory(guiHelper));
+        //registration.addRecipeCategories(smithingCategory = new AllTheTrimsSmithingRecipeCategory(guiHelper));
     }
 
     @Override
@@ -49,4 +49,4 @@ public class JeiPluginImpl implements IModPlugin {
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(Blocks.SMITHING_TABLE), smithingRecipeType);
     }
-}
+}*/

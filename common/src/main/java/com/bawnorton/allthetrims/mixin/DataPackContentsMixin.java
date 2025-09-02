@@ -18,7 +18,7 @@ public abstract class DataPackContentsMixin {
     @ModifyExpressionValue(method = "repopulateTags", at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;collect(Ljava/util/stream/Collector;)Ljava/lang/Object;"))
     private static <T> Object addAllItemsToTrimmableMaterialsAndAllEquipmentToTrimmableArmourTags(Object tagEntriesObj) {
         Map<TagKey<T>, List<RegistryEntry<T>>> tagEntries = (Map<TagKey<T>, List<RegistryEntry<T>>>) tagEntriesObj;
-        if (tagEntries.containsKey(ItemTags.TRIM_MATERIALS)) {
+        /*if (tagEntries.containsKey(ItemTags.TRIM_MATERIALS)) {
             tagEntries = new HashMap<>(tagEntries);
             List<RegistryEntry<T>> entries = new ArrayList<>(tagEntries.get(ItemTags.TRIM_MATERIALS));
             entries.addAll(Registries.ITEM.stream()
@@ -37,7 +37,7 @@ public abstract class DataPackContentsMixin {
                                           .toList());
             tagEntries.put((TagKey<T>) ItemTags.TRIMMABLE_ARMOR, entries);
             tagEntries = Collections.unmodifiableMap(tagEntries);
-        }
+        }*/
         return tagEntries;
     }
 }

@@ -3,7 +3,7 @@ package com.bawnorton.allthetrims.config;
 public class Config {
     private static Config INSTANCE;
 
-    public Boolean debug = false;
+    public Boolean debug = true;
 
     public String trimRegistryMismatchMessage = "§b[All The Trims] §cTrim Registry Mismatch. §rPlease ensure that the client and server have the same mods with the same versions.";
 

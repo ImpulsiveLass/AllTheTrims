@@ -1,0 +1,85 @@
+package java.com.bawnorton.allthetrims.client;
+
+import dev.architectury.registry.client.rendering.ColorHandlerRegistry;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ConfirmScreen;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.item.DyeableArmorItem;
+import net.minecraft.item.Equipment;
+import net.minecraft.item.Item;
+import net.minecraft.item.trim.ArmorTrim;
+import net.minecraft.item.trim.ArmorTrimMaterial;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registries;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Text;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.MathHelper;
+
+import java.awt.*;
+import java.com.bawnorton.allthetrims.AllTheTrims;
+import java.com.bawnorton.allthetrims.Compat;
+import java.com.bawnorton.allthetrims.client.implementation.YACLImpl;
+import java.com.bawnorton.allthetrims.client.util.ImageUtil;
+import java.com.bawnorton.allthetrims.client.util.PaletteHelper;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+public class AllTheTrimsClient {
+    public static final ThreadLocal<String> MATERIAL = new ThreadLocal<>();
+
+    public static void init() {
+        AllTheTrims.LOGGER.debug("Initializing AllTheTrims Client");
+
+        //Andrew6rant https://github.com/Andrew6rant provided the proof of concept code for this
+        //noinspection SuspiciousToArrayCall
+        ColorHandlerRegistry.registerItemColors((stack, tintIndex) -> {
+            ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+            if (networkHandler == null) return -1;
+
+            DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
+            Optional<ArmorTrim> optionalTrim = ArmorTrim.getTrim(registryManager, stack);
+            if (optionalTrim.isEmpty()) {
+                if (stack.getItem() instanceof DyeableArmorItem dyeableArmorItem)
+                    return tintIndex == 0 ? dyeableArmorItem.getColor(stack) : -1;
+                return -1;
+            }
+
+            ArmorTrimMaterial trimMaterial = optionalTrim.get().getMaterial().value();
+            Item trimItem = trimMaterial.ingredient().value();
+            String assetName = trimMaterial.assetName();
+
+            List<Color> palette = PaletteHelper.getPalette(trimItem);
+            if (stack.getItem() instanceof DyeableArmorItem dyeableArmorItem) {
+                if (tintIndex == 0) return dyeableArmorItem.getColor(stack);
+                if (tintIndex >= 2 && assetName.equals(AllTheTrims.TRIM_ASSET_NAME)) {
+                    return palette.get(MathHelper.clamp(6 - tintIndex, 0, palette.size() - 1)).getRGB();
+                }
+                return -1;
+            }
+
+            if (!assetName.equals(AllTheTrims.TRIM_ASSET_NAME)) return -1;
+            if (tintIndex < 1) return -1;
+            Color color = palette.get(MathHelper.clamp(6 - tintIndex, 0, palette.size() - 1));
+            if (tintIndex == 1) return ImageUtil.changeBrightness(color, 0.5f).getRGB();
+            if (tintIndex == 2) return ImageUtil.changeBrightness(color, 0.75f).getRGB();
+            if (tintIndex == 3) return ImageUtil.changeBrightness(color, 0.9f).getRGB();
+            return color.getRGB();
+        }, Registries.ITEM.stream().filter(item -> item instanceof Equipment).toArray(Item[]::new));
+    }
+
+    public static Screen getConfigScreen(Screen parent) {
+        if (Compat.isYaclLoaded()) {
+            return YACLImpl.getScreen(parent);
+        } else {
+            return new ConfirmScreen((result) -> {
+                if (result) {
+                    Util.getOperatingSystem().open(URI.create("https://modrinth.com/mod/yacl/versions"));
+                }
+                MinecraftClient.getInstance().setScreen(parent);
+            }, Text.of("Yet Another Config Lib not installed!"), Text.of("YACL 3 is required to edit the config in game, would you like to install YACL 3?"), ScreenTexts.YES, ScreenTexts.NO);
+        }
+    }
+}
