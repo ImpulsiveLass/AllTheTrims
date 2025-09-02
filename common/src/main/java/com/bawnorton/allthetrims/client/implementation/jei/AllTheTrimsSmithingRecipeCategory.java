@@ -10,8 +10,8 @@ import net.minecraft.recipe.SmithingRecipe;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
-public class AllTheTrimsSmithingRecipeCategory extends SmithingRecipeCategory {
-    private final IDrawable icon;
+//public class AllTheTrimsSmithingRecipeCategory extends SmithingRecipeCategory {
+    /*private final IDrawable icon;
 
     public AllTheTrimsSmithingRecipeCategory(IGuiHelper guiHelper) {
         super(guiHelper);
@@ -36,5 +36,5 @@ public class AllTheTrimsSmithingRecipeCategory extends SmithingRecipeCategory {
     @Override
     public boolean isHandled(SmithingRecipe recipe) {
         return JeiPluginImpl.isTrimmingRecipe(recipe);
-    }
-}
+    }*/
+//}

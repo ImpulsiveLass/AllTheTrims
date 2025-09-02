@@ -1,5 +1,11 @@
+plugins {
+    id "architectury-plugin" version "3.4-SNAPSHOT"
+    id "dev.architectury.loom" version "1.1-SNAPSHOT" apply false
+}
+
 architectury {
-    common(rootProject.enabled_platforms.split(","))
+    // Tell Architectury which platforms this common module supports
+    common(["forge"])
 }
 
 loom {
@@ -7,34 +13,33 @@ loom {
 }
 
 dependencies {
-    // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
-    // Do NOT use other classes from fabric loader
-    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-    // Remove the next line if you don't want to depend on the API
+    // Architectury API (common xplat)
     modApi "dev.architectury:architectury:${rootProject.architectury_version}"
 
-    // mixin addons
+    // Mixin addons
     implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-common:${rootProject.mixin_extras_version}"))
     implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-common:${rootProject.mixin_squared_version}"))
 
-    // config
+    // Config
     modImplementation("dev.isxander.yacl:yet-another-config-lib-common:${rootProject.yacl_version}")
 
-    // compats
+    // Optional compat mods (Forge)
     modCompileOnly("maven.modrinth:immersive-armors:${rootProject.immersive_armors_version}")
 
-    // jei
-    modCompileOnly("mezz.jei:jei-${rootProject.minecraft_version}-fabric:${rootProject.jei_version}") {
-        transitive = false
-    }
+    // REI / EMI
+    modCompileOnly("me.shedaniel:RoughlyEnoughItems-api-forge:${rootProject.rei_version}")
+    modCompileOnly("me.shedaniel:RoughlyEnoughItems-default-plugin-forge:${rootProject.rei_version}")
+    modCompileOnly("dev.emi:emi-forge:${rootProject.emi_version}:api")
+    modCompileOnly("dev.emi:emi-forge:${rootProject.emi_version}")
+}
 
-    // rei
-    modCompileOnly("me.shedaniel:RoughlyEnoughItems-api:${rootProject.rei_version}")
-    modCompileOnly("me.shedaniel:RoughlyEnoughItems-default-plugin:${rootProject.rei_version}")
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 17
+}
 
-    // emi
-    modCompileOnly("dev.emi:emi-xplat-intermediary:${rootProject.emi_version}:api")
-    modCompileOnly("dev.emi:emi-xplat-intermediary:${rootProject.emi_version}")
+java {
+    withSourcesJar()
 }
 
 publishing {
@@ -44,8 +49,6 @@ publishing {
             from components.java
         }
     }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
         // Add repositories to publish to here.
     }

@@ -10,14 +10,19 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.datafixers.util.Function3;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.atlas.PalettedPermutationsAtlasSource;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -40,10 +45,10 @@ public abstract class PalettedPermutationsAtlasSourceMixin {
             if (!paletteKey.getPath().contains("trim_palette"))
                 return function.apply(textures, paletteKey, palettedPermutations);
 
-            List<Identifier> newTextures = new ArrayList<>(textures.size() * 9);
+            List<Identifier> newTextures = new ArrayList<>(textures.size() * 11);
             for (Identifier texture : textures) {
                 newTextures.add(texture);
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < 10; i++) {
                     newTextures.add(texture.withSuffixedPath("_" + i));
                 }
             }
@@ -102,9 +107,8 @@ public abstract class PalettedPermutationsAtlasSourceMixin {
     @ModifyExpressionValue(method = "load", at = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;"))
     private Set<Map.Entry<String, Supplier<IntUnaryOperator>>> removeAllNonBlankPalettes(Set<Map.Entry<String, Supplier<IntUnaryOperator>>> permutations, @Share("identifier") LocalRef<Identifier> identifierRef) {
         String path = identifierRef.get().getPath();
-        String pattern = ".*_\\d.png";
         Set<Map.Entry<String, Supplier<IntUnaryOperator>>> newPermutations = new HashSet<>();
-        if (!path.matches(pattern)) {
+        if (!path.matches(".*_\\d(?:\\.png)?$")) {
             for (Map.Entry<String, Supplier<IntUnaryOperator>> entry : permutations) {
                 if (!entry.getKey().equals(AllTheTrims.TRIM_ASSET_NAME)) {
                     newPermutations.add(entry);
@@ -118,5 +122,24 @@ public abstract class PalettedPermutationsAtlasSourceMixin {
             }
         }
         return newPermutations;
+    }
+    @Inject(method = "method_48492", at = @At("HEAD"), cancellable = true)
+    private static void allowBiggerPalettes(int[] base, int[] mapping, CallbackInfoReturnable<IntUnaryOperator> cir) {
+        int minLength = Math.min(base.length, mapping.length);
+        Int2IntMap map = new Int2IntOpenHashMap(mapping.length);
+        for (int i = 0; i < minLength; i++) {
+            int j = base[i];
+            if (ColorHelper.Abgr.getAlpha(j) != 0) {
+                map.put(ColorHelper.Abgr.getBgr(j), mapping[i]);
+            }
+        }
+        cir.setReturnValue(ix -> {
+            int alpha = ColorHelper.Abgr.getAlpha(ix);
+            if (alpha == 0) return ix;
+            int k = ColorHelper.Abgr.getBgr(ix);
+            int l = map.getOrDefault(k, ColorHelper.Abgr.toOpaque(k));
+            int m = ColorHelper.Abgr.getAlpha(l);
+            return ColorHelper.Abgr.withAlpha(alpha * m / 255, l);
+        });
     }
 }
